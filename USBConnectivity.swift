@@ -7,15 +7,15 @@
 
 import Foundation
 
-protocol PeerConnectivityDelegate {
-    func peer(shouldAcceptDataOfType type: UInt32) -> Bool
-    
-    func peer(didReceiveData data: Data, ofType type: UInt32)
-    
-    func peer(didChangeConnection connected: Bool)
+protocol TypedFramePacket {
+    static func getTypeID() -> UInt32
 }
 
-
+protocol PeerConnectivityDelegate {
+    func peer(shouldAcceptDataOfType type: UInt32) -> Bool
+    func peer(didReceiveData data: Data, ofType type: UInt32)
+    func peer(didChangeConnection connected: Bool)
+}
 
 class USBConnectivity: NSObject {
     
@@ -101,7 +101,7 @@ class USBConnectivity: NSObject {
         channel.userInfo = currentPeerID
         
         connecting = true
-        channel.connect(to: port, over: PTUSBHub.shared(),
+        channel.connect(to: Int32(port!), over: PTUSBHub.shared(),
                         deviceID: NSNumber(value: self.currentPeerID)) {[self] (error) in
             if error != nil {
                 if connecting && channel.userInfo as! Int == currentPeerID {
@@ -136,6 +136,10 @@ class USBConnectivity: NSObject {
         }
         
         send(data: jd!, frameType: frameType)
+    }
+    
+    func send<T: TypedFramePacket & Codable>(codableInJSONWithType: T){
+        send(codableInJSON: codableInJSONWithType, frameType: T.getTypeID())
     }
     
 }
