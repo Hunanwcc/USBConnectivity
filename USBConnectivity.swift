@@ -101,7 +101,7 @@ class USBConnectivity: NSObject {
         channel.userInfo = currentPeerID
         
         connecting = true
-        channel.connect(to: 9123, over: PTUSBHub.shared(),
+        channel.connect(to: port, over: PTUSBHub.shared(),
                         deviceID: NSNumber(value: self.currentPeerID)) {[self] (error) in
             if error != nil {
                 if connecting && channel.userInfo as! Int == currentPeerID {
