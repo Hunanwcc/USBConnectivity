@@ -11,6 +11,11 @@ protocol TypedFramePacket {
     static func getTypeID() -> UInt32
 }
 
+protocol TypedBinaryFramePacket: TypedFramePacket {
+    static func decode(data: Data) -> Self
+    func encode() -> Data
+}
+
 protocol PeerConnectivityDelegate {
     func peer(shouldAcceptDataOfType type: UInt32) -> Bool
     func peer(didReceiveData data: Data, ofType type: UInt32)
@@ -66,9 +71,11 @@ class USBConnectivity: NSObject {
                 return
             }
             self.currentPeerID = info.userInfo!["DeviceID"]! as! Int
+//            print(info.userInfo!)
             DispatchQueue.main.async {
                 self.openConnectChannel()
             }
+            
         }
 
         nc.addObserver(forName: NSNotification.Name.PTUSBdeviceDidDetach,
@@ -140,6 +147,10 @@ class USBConnectivity: NSObject {
     
     func send<T: TypedFramePacket & Codable>(codableInJSONWithType: T){
         send(codableInJSON: codableInJSONWithType, frameType: T.getTypeID())
+    }
+    
+    func send<T: TypedBinaryFramePacket>(binaryWithType: T){
+        send(data: binaryWithType.encode(), frameType: T.getTypeID())
     }
     
 }
